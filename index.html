@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Marketing da Nutrição</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --base-font-size: 16px;
+            --primary-color: #1A73E8;
+            --primary-bg-color: #E8F0FE;
+            --correct-color: #188038;
+            --correct-bg-color: #E6F4EA;
+            --incorrect-color: #D93025;
+            --incorrect-bg-color: #FCE8E6;
+            
+            --light-theme-bg: #f1f3f4;
+            --light-theme-card-bg: #ffffff;
+            --light-theme-text: #202124;
+            --light-theme-text-light: #5f6368;
+            --light-theme-border: #dadce0;
+            --light-theme-shadow: 0 1px 2px 0 rgba(60,64,67,0.3), 0 2px 6px 2px rgba(60,64,67,0.15);
+
+            --dark-theme-bg: #202124;
+            --dark-theme-card-bg: #2d2e30;
+            --dark-theme-text: #e8eaed;
+            --dark-theme-text-light: #bdc1c6;
+            --dark-theme-border: #5f6368;
+            --dark-theme-shadow: 0 1px 2px 0 rgba(0,0,0,0.3), 0 2px 6px 2px rgba(0,0,0,0.15);
+
+            --neutral-bg-color: var(--light-theme-bg);
+            --card-bg-color: var(--light-theme-card-bg);
+            --text-color: var(--light-theme-text);
+            --light-text-color: var(--light-theme-text-light);
+            --border-color: var(--light-theme-border);
+            --shadow-color: var(--light-theme-shadow);
+
+            --sidebar-width: 300px;
+        }
+
+        body.dark-mode {
+            --neutral-bg-color: var(--dark-theme-bg);
+            --card-bg-color: var(--dark-theme-card-bg);
+            --text-color: var(--dark-theme-text);
+            --light-text-color: var(--dark-theme-text-light);
+            --border-color: var(--dark-theme-border);
+            --shadow-color: var(--dark-theme-shadow);
+        }
+
+        html {
+            font-size: var(--base-font-size);
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Google Sans', 'Roboto', sans-serif;
+            background-color: var(--neutral-bg-color);
+            margin: 0;
+            display: flex;
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* --- Sidebar --- */
+        #sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            background-color: transparent;
+            position: fixed;
+            top: 0;
+            left: 0;
+            padding: 0.75rem;
+            box-sizing: border-box;
+            transition: transform 0.3s ease-in-out;
+            z-index: 2000;
+        }
+
+        .sidebar-content {
+            background-color: var(--card-bg-color);
+            width: 100%;
+            height: 100%;
+            border-radius: 1rem;
+            box-shadow: var(--shadow-color);
+            border: 1px solid var(--border-color);
+            padding: 1.25rem;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        #sidebar h2 {
+            font-size: 1.5rem;
+            color: var(--text-color);
+            margin-top: 0;
+            margin-bottom: 1.25rem;
+            padding-bottom: 0.625rem;
+            border-bottom: 1px solid var(--border-color);
+            flex-shrink: 0;
+            transition: color 0.3s, border-color 0.3s;
+        }
+
+        #sidebar nav {
+             overflow-y: auto;
+             flex-grow: 1;
+        }
+
+        #sidebar nav ul { list-style: none; padding: 0; margin: 0; }
+        #sidebar nav li a { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; text-decoration: none; color: var(--light-text-color); font-weight: 500; border-radius: 1.5rem; transition: background-color 0.2s ease, color 0.2s ease; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        #sidebar nav li a:hover, #sidebar nav li a.active { background-color: var(--primary-bg-color); color: var(--primary-color); }
+        #sidebar .submenu { padding-left: 1rem; max-height: 0; overflow: hidden; transition: max-height 0.4s ease-in-out; }
+        #sidebar .submenu.open { max-height: 30rem; }
+        #sidebar .has-submenu > a { cursor: pointer; justify-content: space-between; }
+        #sidebar .arrow { border: solid var(--light-text-color); border-width: 0 2px 2px 0; display: inline-block; padding: 3px; transform: rotate(45deg); transition: transform 0.3s, border-color 0.3s; }
+        #sidebar .has-submenu > a:hover .arrow, #sidebar .has-submenu > a.active .arrow { border-color: var(--primary-color); }
+        #sidebar .has-submenu.open > a .arrow { transform: rotate(-135deg); }
+
+        /* --- Main Content & Header --- */
+        .page-content { margin-left: var(--sidebar-width); width: calc(100% - var(--sidebar-width)); padding: 1.25rem; padding-top: 5rem; }
+        .content-section { display: none; animation: fadeIn 0.5s ease; }
+        .content-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        #header-container {
+            width: calc(100% - var(--sidebar-width));
+            background-color: rgba(241, 243, 244, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            position: fixed;
+            top: 0;
+            left: var(--sidebar-width);
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 60px;
+            padding: 0 1.5rem;
+            box-sizing: border-box;
+            border-bottom: 1px solid var(--border-color);
+            transition: all 0.3s ease-in-out;
+        }
+        body.dark-mode #header-container { background-color: rgba(45, 46, 48, 0.85); }
+        
+        .header-info-item { font-size: 1rem; font-weight: 500; padding: 0.5rem 1rem; border-radius: 1.5rem; transition: all 0.3s ease; }
+        #score-counter { color: var(--correct-color); background-color: var(--correct-bg-color); }
+        #incorrect-counter { color: var(--incorrect-color); background-color: var(--incorrect-bg-color); }
+        #remaining-counter { color: var(--primary-color); background-color: var(--primary-bg-color); }
+        #counters-wrapper { display: flex; gap: 0.75rem; }
+
+        #font-controls { display: flex; align-items: center; position: absolute; left: 50%; transform: translateX(-50%); }
+        #font-controls button { background: none; border: 1px solid var(--border-color); color: var(--light-text-color); font-weight: bold; width: 2.25rem; height: 2.25rem; border-radius: 50%; cursor: pointer; margin: 0 0.25rem; transition: background-color 0.2s, color 0.2s; }
+        #font-controls button:hover { background-color: var(--primary-bg-color); color: var(--primary-color); }
+        
+        /* Theme Switcher */
+        #theme-switcher { margin-right: 1rem; }
+        .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 26px; }
+        .slider:before { position: absolute; content: "☀️"; height: 18px; width: 18px; left: 5px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; text-align: center; font-size: 12px; line-height: 18px; color: #333; }
+        input:checked + .slider { background-color: var(--primary-color); }
+        input:checked + .slider:before { transform: translateX(22px); content: "🌙"; }
+        
+        /* Progress Bar */
+        #progress-container { position: absolute; bottom: -1px; left: 0; width: 100%; height: 4px; background-color: var(--border-color); transition: background-color 0.3s; }
+        #progress-bar { width: 0%; height: 100%; background-color: var(--primary-color); transition: width 0.4s ease-out, background-color 0.3s; }
+
+        /* Main Content Wrapper */
+        .main-content-wrapper { width: 100%; max-width: 850px; margin: 0 auto; }
+        h1 { text-align: center; color: var(--text-color); font-size: 2.5rem; font-weight: 700; margin-bottom: 0.625rem; }
+        h3 { text-align: center; color: var(--light-text-color); font-size: 1.5rem; font-weight: 400; margin-top: 2.5rem; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.625rem; }
+        .question-container { background: var(--card-bg-color); border-radius: 0.75rem; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 1px 2px rgba(0,0,0,.1), 0 2px 4px rgba(0,0,0,.1); border: 1px solid var(--border-color); transition: all 0.3s ease; }
+        .question { font-weight: 500; font-size: 1.2rem; margin-bottom: 1.25rem; color: var(--text-color); line-height: 1.6; }
+        .options label { display: flex; align-items: center; margin: 0.625rem 0; padding: 1rem; border: 1px solid var(--border-color); border-radius: 0.5rem; cursor: pointer; transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease; line-height: 1.5; }
+        .options label:hover { background: var(--neutral-bg-color); border-color: #9aa0a6; }
+        .options input { margin-right: 0.75rem; width: 1.125rem; height: 1.125rem; accent-color: var(--primary-color); }
+        
+        .correct { background: var(--correct-bg-color) !important; border-color: var(--correct-color) !important; color: var(--correct-color) !important; font-weight: 500; }
+        .incorrect { background: var(--incorrect-bg-color) !important; border-color: var(--incorrect-color) !important; color: var(--incorrect-color) !important; font-weight: 500; }
+        
+        button.quiz-button { display: block; width: 220px; margin: 1.5rem auto 0; padding: 0.75rem 1.25rem; background: var(--primary-color); color: white; border: none; border-radius: 0.5rem; font-size: 1rem; font-weight: 500; cursor: pointer; transition: background-color 0.2s ease, transform 0.2s ease; }
+        button.quiz-button:disabled { background: #bdbdbd; cursor: not-allowed; transform: none; }
+        button.quiz-button:hover:not(:disabled) { background: var(--primary-hover-color); transform: translateY(-2px); }
+        .feedback { margin-top: 1.25rem; font-size: 1rem; line-height: 1.7; background: var(--neutral-bg-color); padding: 1.25rem; border-radius: 0.5rem; border-left: 4px solid var(--border-color); animation: slideDown 0.4s ease; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .feedback .correct-feedback::before { content: '✅ '; }
+        .feedback .incorrect-feedback::before { content: '❌ '; }
+        #final-score { text-align: center; font-size: 1.5rem; color: var(--text-color); margin: 1.25rem 0; background: var(--card-bg-color); padding: 1.5rem; border-radius: 0.75rem; display: none; box-shadow: var(--shadow-color); }
+        #final-score span { font-weight: 700; color: var(--primary-color); }
+        #incorrect-review-list { margin-top: 1.5rem; text-align: left; font-size: 1rem; }
+        #incorrect-review-list h4 { margin-bottom: 0.5rem; }
+        #incorrect-review-list a { display: block; padding: 0.5rem; border-radius: 4px; text-decoration: none; color: var(--primary-color); }
+        #incorrect-review-list a:hover { background-color: var(--primary-bg-color); }
+        
+        #menu-toggle, #reset-quiz-btn { display: none; }
+        #reset-quiz-btn { margin-top: 1.5rem; }
+
+        /* Modal for Resume Prompt */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 3000; display: flex; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: opacity 0.3s, visibility 0.3s; }
+        .modal-overlay.visible { opacity: 1; visibility: visible; }
+        .modal-content { background: var(--card-bg-color); padding: 2rem; border-radius: 1rem; text-align: center; box-shadow: var(--shadow-color); transform: scale(0.9); transition: transform 0.3s; }
+        .modal-overlay.visible .modal-content { transform: scale(1); }
+        .modal-content h4 { margin-top: 0; }
+        .modal-buttons { margin-top: 1.5rem; display: flex; gap: 1rem; justify-content: center; }
+
+        /* --- Responsive Design --- */
+
+        @media (max-width: 1024px) {
+            #sidebar { transform: translateX(-100%); }
+            #sidebar.open { transform: translateX(0); }
+            .page-content { margin-left: 0; width: 100%; }
+            #header-container { width: 100%; left: 0; }
+            #menu-toggle { display: flex; justify-content: center; align-items: center; position: fixed; top: 10px; left: 10px; z-index: 2001; background: var(--card-bg-color); border: none; box-shadow: var(--shadow-color); width: 40px; height: 40px; border-radius: 50%; cursor: pointer; }
+        }
+        @media (max-width: 768px) {
+            #counters-wrapper { display: none; }
+            #font-controls { display: none; }
+        }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.2.1",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/",
+    "react/": "https://aistudiocdn.com/react@^19.2.1/",
+    "vite": "https://aistudiocdn.com/vite@^7.2.6",
+    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1"
+  }
+}
+</script>
+</head>
+<body>
+    <div id="sidebar">
+        <div class="sidebar-content">
+            <h2>Menu de Estudo</h2>
+            <nav>
+                <ul>
+                    <li><a href="#" data-section="ae2" class="nav-link active"><span>📚</span>Atividade 2 (AE2)</a></li>
+                    <li><a href="#" data-section="ae3" class="nav-link"><span>📚</span>Atividade 3 (AE3)</a></li>
+                    <li class="has-submenu" id="livro-menu-item">
+                        <a id="livro-toggle"><span>📖</span>Questões (Livro) <i class="arrow"></i></a>
+                        <ul class="submenu" id="livro-submenu">
+                           <li><a href="#" data-section="livro-1" class="nav-link" title="Introdução e Princípios">Unidade 1 - Introdução</a></li>
+                            <li><a href="#" data-section="livro-2" class="nav-link" title="Segmentação e 4Ps">Unidade 2 - Segmentação</a></li>
+                            <li><a href="#" data-section="livro-3" class="nav-link" title="Pesquisa de Marketing">Unidade 3 - Pesquisa</a></li>
+                            <li><a href="#" data-section="livro-4" class="nav-link" title="Planejamento e Controle">Unidade 4 - Planejamento</a></li>
+                            <li><a href="#" data-section="livro-5" class="nav-link" title="Análise de Mercados">Unidade 5 - Análise</a></li>
+                            <li><a href="#" data-section="livro-6" class="nav-link" title="Plano de Marketing">Unidade 6 - Plano Mkt</a></li>
+                            <li><a href="#" data-section="livro-7" class="nav-link" title="Plano de Negócios">Unidade 7 - Plano Negócios</a></li>
+                            <li><a href="#" data-section="livro-8" class="nav-link" title="Marketing Pessoal">Unidade 8 - Mkt Pessoal</a></li>
+                            <li><a href="#" data-section="livro-9" class="nav-link" title="Atuação do Nutricionista">Unidade 9 - Nutricionista</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+
+    <div class="page-content">
+        <div id="header-container">
+             <div id="theme-switcher">
+                <label class="switch">
+                    <input type="checkbox" id="dark-mode-toggle">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div id="font-controls">
+                <button id="font-decrease" title="Diminuir Fonte">A-</button>
+                <button id="font-increase" title="Aumentar Fonte">A+</button>
+            </div>
+            <div id="counters-wrapper">
+                <div id="score-counter" class="header-info-item"></div>
+                <div id="incorrect-counter" class="header-info-item"></div>
+                <div id="remaining-counter" class="header-info-item"></div>
+            </div>
+            <div id="progress-container">
+                <div id="progress-bar"></div>
+            </div>
+        </div>
+        <button id="menu-toggle">☰</button>
+        
+        <div id="resume-prompt" class="modal-overlay">
+            <div class="modal-content">
+                <h4>Sessão Encontrada!</h4>
+                <p>Deseja continuar de onde parou?</p>
+                <div class="modal-buttons">
+                    <button id="resume-yes" class="quiz-button">Sim, continuar</button>
+                    <button id="resume-no" class="quiz-button" style="background-color: var(--incorrect-color);">Não, começar de novo</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content-wrapper">
+            <h1>Quiz Marketing da Nutrição</h1>
+            <div id="final-score"></div>
+
+            <section id="ae2" class="content-section active">
+                <h3>Atividade de Estudo 2</h3>
+                <div id="quiz-container-ae2"></div>
+            </section>
+
+            <section id="ae3" class="content-section">
+                <h3>Atividade de Estudo 3</h3>
+                <div id="quiz-container-ae3"></div>
+            </section>
+            
+            <section id="livro-1" class="content-section"><h3>Unidade 1: Introdução e Princípios</h3><div id="quiz-container-livro-1"></div></section>
+            <section id="livro-2" class="content-section"><h3>Unidade 2: Segmentação e 4Ps</h3><div id="quiz-container-livro-2"></div></section>
+            <section id="livro-3" class="content-section"><h3>Unidade 3: Pesquisa de Marketing</h3><div id="quiz-container-livro-3"></div></section>
+            <section id="livro-4" class="content-section"><h3>Unidade 4: Planejamento e Controle</h3><div id="quiz-container-livro-4"></div></section>
+            <section id="livro-5" class="content-section"><h3>Unidade 5: Análise de Mercados</h3><div id="quiz-container-livro-5"></div></section>
+            <section id="livro-6" class="content-section"><h3>Unidade 6: Plano de Marketing</h3><div id="quiz-container-livro-6"></div></section>
+            <section id="livro-7" class="content-section"><h3>Unidade 7: Plano de Negócios</h3><div id="quiz-container-livro-7"></div></section>
+            <section id="livro-8" class="content-section"><h3>Unidade 8: Marketing Pessoal</h3><div id="quiz-container-livro-8"></div></section>
+            <section id="livro-9" class="content-section"><h3>Unidade 9: Atuação do Nutricionista</h3><div id="quiz-container-livro-9"></div></section>
+        </div>
+    </div>
+
+    <script>
+        // --- QUIZ DATA (MARKETING DA NUTRIÇÃO) ---
+        const allQuestions = {
+            ae2: [
+                {
+                    question: "Uma empresa brasileira de alimentos saudáveis deseja lançar uma linha de snacks funcionais. A equipe decide aplicar segmentação comportamental. Assinale a alternativa que melhor representa a aplicação correta dessa segmentação:",
+                    options: ["Focar nos consumidores de alta renda, considerando que eles estão dispostos a pagar mais.", "Segmentar o mercado considerando características demográficas, como idade e gênero.", "Lançar um único snack com todos os benefícios possíveis para atender a todos.", "Priorizar o lançamento em supermercados de grande porte.", "Dividir o mercado em grupos com base nos benefícios que cada grupo busca, criando produtos específicos."],
+                    correct: 4,
+                    explanations: { correct: "A segmentação comportamental divide os compradores com base em seus conhecimentos, atitudes, usos ou respostas a um produto. A divisão por 'benefícios buscados' é uma forma clássica dessa segmentação (Kotler & Armstrong)." }
+                },
+                {
+                    question: "Uma empresa de alimentos funcionais lança um snack proteico dos EUA no Brasil. Pesquisas mostram que brasileiros valorizam apelo natural e preço. Qual a estratégia mais adequada?",
+                    options: ["Ajustar o produto em termos de preço, sem modificar sabores.", "Focar na publicidade digital e redes sociais apenas.", "Manter exatamente o mesmo produto e comunicação dos EUA.", "Investir em segmentação psicográfica apenas.", "Realizar adaptação do produto (sabores/porções) às preferências locais, mantendo o branding, mas ajustando ao comportamento brasileiro."],
+                    correct: 4,
+                    explanations: { correct: "A adaptação do produto é essencial quando se entra em mercados internacionais com culturas alimentares diferentes. O consumidor brasileiro tem preferências específicas (sabor, naturalidade) que diferem do mercado norte-americano." }
+                },
+                {
+                    question: "Sobre os tipos de mercados (potencial, disponível, alvo, atendido), analise as afirmativas:<br>I. Mercado disponível refere-se ao segmento real onde a empresa vende.<br>II. Mercado atendido inclui consumidores com interesse e renda, mas limitados por leis.<br>III. Mercado potencial é composto por todos com interesse e renda.<br>IV. Mercado-alvo é o segmento específico que a empresa escolhe focar.<br>É correto o que se afirma em:",
+                    options: ["I, apenas.", "II e IV, apenas.", "III e IV, apenas.", "I, II e III, apenas.", "I, II, III e IV."],
+                    correct: 2,
+                    explanations: { correct: "A afirmativa III define corretamente o mercado potencial e a IV o mercado-alvo. O mercado disponível (I) são os que têm interesse, renda e *acesso*. O mercado atendido (II) é a parte do mercado qualificado que a empresa decide atacar." }
+                },
+                {
+                    question: "Sobre Marketing Sensorial e de Experiência:<br>I. Marketing sensorial usa aromas, cores, etc.<br>II. Marketing de experiência busca interações memoráveis.<br>III. Compartilham o objetivo de conexão emocional.<br>IV. Sensorial foca na vivência global, experiência em estímulos específicos.<br>É correto o que se afirma em:",
+                    options: ["I e IV, apenas.", "II e III, apenas.", "II e IV, apenas.", "I, II e III, apenas.", "II, III e IV, apenas."],
+                    correct: 3,
+                    explanations: { correct: "As afirmativas I, II e III estão corretas. A IV inverte ou confunde os conceitos: o marketing sensorial foca nos estímulos (sentidos), enquanto o de experiência foca na vivência global e memorável." }
+                },
+                {
+                    question: "Sobre o impacto das cores no marketing sensorial de alimentos, assinale a correta:",
+                    options: ["O amarelo é associado à alegria e energia, estimulando o apetite.", "O azul evoca fome intensa e urgência.", "O verde sugere artificialidade.", "O preto é usado para transmitir baixo custo.", "O vermelho é associado apenas a alimentos frios."],
+                    correct: 0,
+                    explanations: { correct: "Cores quentes como amarelo e vermelho são conhecidas por estimular o apetite e evocar energia/alegria. O azul geralmente suprime o apetite ou é associado a higiene/frio." }
+                },
+                {
+                    question: "Qual tipo de pesquisa de marketing investiga evoluções nas preferências e usa análise de mídias sociais para detectar novos padrões (ex: glúten-free)?",
+                    options: ["Pesquisas de comportamento de compra.", "Pesquisas de tendências de consumo.", "Pesquisas de produto.", "Pesquisas de segmentação.", "Pesquisas de preferências do consumidor."],
+                    correct: 1,
+                    explanations: { correct: "A pesquisa de tendências de consumo foca em identificar padrões emergentes e mudanças no comportamento ao longo do tempo, como a busca por produtos sem glúten ou à base de plantas." }
+                },
+                {
+                    question: "Sobre o conceito e papel do marketing:<br>I. Objetivo é criar relacionamentos duradouros.<br>II. Produtos ajustados tornam a venda natural.<br>III. É um processo social e administrativo de troca de valor.<br>IV. Foco é apenas vender e lucrar a qualquer custo.<br>É correto o que se afirma em:",
+                    options: ["IV, apenas.", "I e IV, apenas.", "II e III, apenas.", "I, II e III, apenas.", "I, II, III e IV."],
+                    correct: 3,
+                    explanations: { correct: "As afirmativas I, II e III refletem a visão moderna de marketing (Kotler). A IV está incorreta pois o marketing não é apenas vendas/propaganda, mas a criação de valor." }
+                },
+                {
+                    question: "Uma clínica analisa estilo de vida, personalidade e valores para criar grupos de clientes. Qual segmentação é essa?",
+                    options: ["Geográfica.", "Psicográfica.", "Demográfica.", "Por benefício.", "Comportamental."],
+                    correct: 1,
+                    explanations: { correct: "A segmentação psicográfica divide os consumidores com base em classe social, estilo de vida ou características de personalidade." }
+                },
+                {
+                    question: "Sobre a pesquisa de marketing:<br>I. Identifica oportunidades e nichos inexplorados.<br>PORQUE<br>II. É uma ferramenta estratégica que antecipa tendências e prevê demandas.<br>Assinale a opção correta:",
+                    options: ["As asserções I e II são verdadeiras, e a II é uma justificativa correta da I.", "As asserções I e II são verdadeiras, mas a II não é uma justificativa correta da I.", "A asserção I é verdadeira e a II é falsa.", "A asserção I é falsa e a II é verdadeira.", "As asserções I e II são falsas."],
+                    correct: 0,
+                    explanations: { correct: "Ambas as asserções são verdadeiras. A pesquisa permite identificar nichos (I) justamente porque fornece dados para antecipar tendências e entender a demanda (II)." }
+                },
+                {
+                    question: "Sobre necessidades, desejos e demandas:<br>'Um norte-americano quer um Big Mac, um habitante de Papua Nova Guiné quer cará'. Isso exemplifica:",
+                    options: ["Desejos são únicos e biológicos.", "Marketing cria necessidades.", "Demanda independe de recursos.", "Necessidades fisiológicas básicas podem se expressar em desejos diferentes conforme a cultura.", "Necessidades humanas são criadas pelo marketing."],
+                    correct: 3,
+                    explanations: { correct: "A necessidade é a privação básica (fome). O desejo é a forma que essa necessidade assume moldada pela cultura e personalidade." }
+                }
+            ],
+            ae3: [
+                {
+                    question: "A empresa NatVax reuniu um pequeno grupo de consumidores em uma sala para discutir embalagens e compartilhar opiniões em tempo real. Que tipo de pesquisa é essa?",
+                    options: ["Survey.", "Grupo focal (Focus Group).", "Entrevista em profundidade.", "Observação não participante.", "Entrevistas semiestruturadas."],
+                    correct: 1,
+                    explanations: { correct: "O Grupo Focal consiste em reunir um pequeno grupo de pessoas para discutir um tema sob a mediação de um moderador, permitindo interação e feedback qualitativo." }
+                },
+                {
+                    question: "Sobre as estratégias competitivas de Porter (Liderança em Custos, Diferenciação, Foco), analise:<br>I. Foco pode combinar custos ou diferenciação em nicho restrito.<br>II. Liderança em custos visa maior participação via preços baixos.<br>III. Diferenciação investe em desempenho superior/qualidade.<br>IV. Risco da diferenciação é surgimento de concorrentes com custos menores.<br>É correto o que se afirma em:",
+                    options: ["I e IV, apenas.", "II e III, apenas.", "II e IV, apenas.", "I, II e III, apenas.", "Todas as alternativas (I, II, III, IV)."],
+                    correct: 4,
+                    explanations: { correct: "Todas as afirmativas descrevem corretamente as estratégias genéricas de Michael Porter conforme a literatura de marketing." }
+                },
+                {
+                    question: "Nutricionistas no cenário digital:<br>I. Publicidade influencia escolhas (muitas vezes produtos não saudáveis).<br>PORQUE<br>II. Para contrabalançar, nutricionistas devem usar dados científicos e educar o público.<br>Assinale a correta:",
+                    options: ["As asserções I e II são verdadeiras, mas a II não é justificativa da I.", "A asserção I é falsa.", "As asserções I e II são verdadeiras, e a II é uma justificativa (ou consequência lógica de ação) da I.", "A asserção I é verdadeira e a II é falsa.", "Ambas falsas."],
+                    correct: 0,
+                    explanations: { correct: "Ambas são verdadeiras. A II é a resposta ética ao problema apresentado na I, mas não a 'causa' da I. A relação é de problema-solução, não causa-efeito direto no sentido estrito, mas no contexto da questão, ambas são verdadeiras e correlacionadas." }
+                },
+                {
+                    question: "Sobre amostragem em pesquisa:<br>I. Estratificada é para população totalmente homogênea (Falso).<br>II. Amostragem permite generalizar conclusões.<br>III. Aleatória simples reduz vieses.<br>IV. Estratificada divide em grupos homogêneos (estratos).<br>É correto o que se afirma em:",
+                    options: ["I e IV.", "II e III.", "III e IV.", "I, II e III.", "II, III e IV."],
+                    correct: 4,
+                    explanations: { correct: "A afirmativa I é falsa. A amostragem estratificada é usada quando a população é heterogênea e precisa ser dividida em subgrupos homogêneos para garantir representatividade." }
+                },
+                {
+                    question: "Sobre cultura e comportamento do consumidor:<br>I. Aceitação do produto depende do alinhamento com valores culturais.<br>PORQUE<br>II. Fatores culturais são influências distantes e irrelevantes (Falso).<br>Assinale a correta:",
+                    options: ["I e II verdadeiras.", "I verdadeira, II falsa.", "I falsa, II verdadeira.", "Ambas falsas.", "I e II verdadeiras, sem relação."],
+                    correct: 1,
+                    explanations: { correct: "A cultura é uma influência profunda e direta. A asserção II é falsa ao dizer que são influências distantes/irrelevantes ou que se limitam apenas a grupos pequenos; a cultura é abrangente." }
+                },
+                {
+                    question: "Teorias de marketing de alimentos:<br>I. Marketing nutricional foca na educação sobre nutrientes.<br>II. Marketing social, sensorial e nutricional ajudam escolhas conscientes.<br>III. Marketing sensorial usa 5 sentidos.<br>IV. Marketing social visa escolhas saudáveis/sustentáveis.<br>É correto o que se afirma em:",
+                    options: ["IV apenas.", "I e IV.", "II e III.", "I, II e III.", "I, II, III e IV."],
+                    correct: 4,
+                    explanations: { correct: "Todas as definições estão corretas e descrevem as vertentes do marketing aplicadas à nutrição." }
+                },
+                {
+                    question: "Sobre o Plano de Marketing:<br>I. Plano tático detalha ações específicas.<br>II. Plano tático é mais operacional.<br>III. Plano estratégico inclui SWOT, segmentação, longo prazo.<br>IV. Plano estratégico define visão de longo prazo.<br>É correto o que se afirma em:",
+                    options: ["II apenas.", "I e IV.", "III e IV.", "I, II e III.", "I, II, III e IV."],
+                    correct: 4,
+                    explanations: { correct: "Todas as afirmativas distinguem corretamente o planejamento estratégico (longo prazo, direção) do tático (curto prazo, ações específicas, 4Ps)." }
+                },
+                {
+                    question: "Neuromarketing:<br>I. Permite criar campanhas eficazes compreendendo respostas inconscientes.<br>PORQUE<br>II. Dispensa pesquisas tradicionais pois o cérebro é mais preciso (Falso).<br>Assinale a correta:",
+                    options: ["I e II verdadeiras.", "I e II verdadeiras, sem relação.", "I verdadeira, II falsa.", "I falsa, II verdadeira.", "Ambas falsas."],
+                    correct: 2,
+                    explanations: { correct: "A asserção I é verdadeira. A II é falsa porque o neuromarketing não dispensa as pesquisas tradicionais; ele as complementa." }
+                },
+                {
+                    question: "Posicionamento do profissional:<br>I. Posicionamento deve ser consistente, único e imutável (Falso - pode evoluir).<br>PORQUE<br>II. Objetivo é criar identidade clara que ressoe com o público.<br>Assinale a correta:",
+                    options: ["I e II verdadeiras.", "I e II verdadeiras, sem relação.", "I verdadeira, II falsa.", "I falsa, II verdadeira.", "Ambas falsas."],
+                    correct: 3,
+                    explanations: { correct: "A asserção I é falsa pois o posicionamento não é imutável; ele pode e deve ser ajustado conforme o mercado muda (reposicionamento). A II é verdadeira." }
+                },
+                {
+                    question: "Considere uma empresa lançando snacks e aplicando os 4Cs (Cliente, Custo, Conveniência, Comunicação). Analise:<br>I. Custo significa reduzir preço independente do valor (Falso).<br>II. Comunicação deve enfatizar benefícios e histórias.<br>III. Foco no cliente permite identificar preferências.<br>IV. Conveniência inclui facilitar acesso e embalagens práticas.<br>É correto o que se afirma em:",
+                    options: ["I e IV.", "II e III.", "III e IV.", "I, II e III.", "II, III e IV."],
+                    correct: 4,
+                    explanations: { correct: "A afirmativa I é falsa. Nos 4Cs, 'Custo' refere-se ao custo total para o cliente (incluindo tempo, esforço), não apenas baixar o preço do produto." }
+                }
+            ],
+            livro: [
+                [ // Unidade 1
+                    { question: "A essência do marketing, segundo Kotler e Keller (2018), é:", options: ["Vender a qualquer custo.", "Identificar e satisfazer necessidades.", "Criar produtos caros.", "Focar apenas na produção.", "Ignorar a concorrência."], correct: 1, explanations: { correct: "O marketing trata de identificar e satisfazer necessidades humanas e sociais de forma lucrativa." } },
+                    { question: "Os 4Ps do Marketing são:", options: ["Pessoas, Processos, Programas, Performance.", "Produto, Preço, Praça, Promoção.", "Planejamento, Pesquisa, Produção, Publicidade.", "Poder, Política, Parceria, Paixão.", "Preço, Praça, Propaganda, Público."], correct: 1, explanations: { correct: "O mix de marketing clássico é composto por Produto, Preço, Praça (Distribuição) e Promoção." } },
+                    { question: "Qual das opções NÃO é uma aplicação do marketing citada?", options: ["Bens e Serviços.", "Eventos e Experiências.", "Pessoas e Lugares.", "Ideias e Informações.", "Impostos e Taxas."], correct: 4, explanations: { correct: "O marketing aplica-se a bens, serviços, eventos, experiências, pessoas, lugares, propriedades, organizações, informações e ideias." } }
+                ],
+                [ // Unidade 2
+                    { question: "A segmentação que divide o mercado com base em onde as pessoas vivem é:", options: ["Demográfica.", "Psicográfica.", "Geográfica.", "Comportamental.", "Socioeconômica."], correct: 2, explanations: { correct: "A segmentação geográfica divide o mercado em unidades geográficas como nações, estados, regiões, cidades ou bairros." } },
+                    { question: "A Geração Y, ou Millennials, é caracterizada por:", options: ["Nascidos antes de 1945.", "Forte presença em mídias sociais e ativismo.", "Preferência por rádio.", "Aversão à tecnologia.", "Foco exclusivo em preço."], correct: 1, explanations: { correct: "Os Millennials (1979-1994) são marcados pela tecnologia, mídias sociais e preocupação com causas sociais/ambientais." } },
+                    { question: "A segmentação psicográfica usa:", options: ["Idade e Renda.", "País e Cidade.", "Personalidade, estilo de vida e valores.", "Ocasião de compra.", "Grau de fidelidade."], correct: 2, explanations: { correct: "A psicografia estuda o interior do consumidor: seus valores, estilo de vida e traços de personalidade." } }
+                ],
+                [ // Unidade 3
+                    { question: "Qual técnica de pesquisa envolve reunir um pequeno grupo para discussão moderada?", options: ["Survey.", "Observação.", "Grupo Focal.", "Dados secundários.", "Experimento."], correct: 2, explanations: { correct: "Grupos focais (focus groups) reúnem 6 a 10 pessoas para discutir um produto ou conceito sob a direção de um moderador." } },
+                    { question: "Para que serve a 'Observação de Campo'?", options: ["Para tabular dados estatísticos.", "Para observar como clientes interagem com produtos no ambiente real.", "Para criar logotipos.", "Para definir preços.", "Para contratar funcionários."], correct: 1, explanations: { correct: "A pesquisa observacional coleta dados primários observando pessoas, ações e situações relevantes no local." } },
+                    { question: "Consumidores com 'Consciência Nutricional' tendem a:", options: ["Comprar o mais barato.", "Ignorar rótulos.", "Buscar informações sobre nutrientes e benefícios à saúde.", "Preferir fast-food.", "Não se importar com a origem do alimento."], correct: 2, explanations: { correct: "Consumidores conscientes buscam ativamente informações sobre a composição e benefícios dos alimentos." } }
+                ],
+                [ // Unidade 4
+                    { question: "Na análise SWOT, 'Forças' e 'Fraquezas' são fatores:", options: ["Externos.", "Internos.", "Futuros.", "Impossíveis de medir.", "Irrelevantes."], correct: 1, explanations: { correct: "Forças e Fraquezas são fatores internos (controláveis) da empresa. Oportunidades e Ameaças são externos." } },
+                    { question: "A estratégia de 'Liderança em Custos' de Porter visa:", options: ["Ter o produto mais caro.", "Produzir e distribuir a custos menores para ter preços competitivos.", "Focar em um nicho muito pequeno.", "Oferecer o produto mais luxuoso.", "Ignorar a concorrência."], correct: 1, explanations: { correct: "A liderança em custos busca eficiência máxima para oferecer preços baixos e ganhar participação de mercado." } },
+                    { question: "O que é uma 'Aliança Promocional'?", options: ["Fusão de empresas.", "Uma empresa promove o produto/serviço de outra.", "Compra de concorrentes.", "Guerra de preços.", "Contratação de funcionários."], correct: 1, explanations: { correct: "Exemplo: uma rede de fast-food promovendo brinquedos de um filme (estúdio de cinema) em seus lanches." } }
+                ],
+                [ // Unidade 5
+                    { question: "O que compõe a 'Demanda de Mercado'?", options: ["Apenas o desejo de compra.", "Volume total de vendas em uma área e período específicos.", "A produção total da fábrica.", "O estoque da empresa.", "O número de funcionários."], correct: 1, explanations: { correct: "A demanda de mercado é o volume total que seria comprado por um grupo definido, em uma área geográfica, em um período de tempo." } },
+                    { question: "O 'Mercado Disponível' é:", options: ["Quem tem interesse, renda e acesso.", "Quem já comprou.", "Quem não gosta do produto.", "O mercado global.", "A concorrência."], correct: 0, explanations: { correct: "Mercado disponível é o conjunto de consumidores que possuem interesse, renda e acesso a uma oferta específica." } },
+                    { question: "Fatores Culturais no comportamento de compra incluem:", options: ["Idade e Renda.", "Motivação e Percepção.", "Cultura, Subcultura e Classe Social.", "Família e Papéis.", "Preço e Produto."], correct: 2, explanations: { correct: "Cultura, subcultura e classe social são as influências culturais fundamentais no comportamento do consumidor." } }
+                ],
+                [ // Unidade 6
+                    { question: "Qual seção do plano de marketing apresenta uma visão geral rápida?", options: ["Análise Financeira.", "Resumo Executivo.", "Estratégia.", "Tática.", "Análise SWOT."], correct: 1, explanations: { correct: "O Resumo Executivo abre o plano de marketing apresentando um breve resumo das principais metas e recomendações." } },
+                    { question: "A 'Análise da Situação' no plano de marketing inclui:", options: ["Dados históricos, mercado, concorrentes e SWOT.", "Apenas o lucro desejado.", "A lista de funcionários.", "O design do logotipo.", "O preço final."], correct: 0, explanations: { correct: "Essa seção fornece o contexto necessário, analisando o ambiente interno e externo antes de definir estratégias." } },
+                    { question: "O que são 'Inovações Contínuas'?", options: ["Produtos que criam novos mercados.", "Melhorias e revisões de produtos existentes.", "Produtos que falharam.", "Cópias exatas da concorrência.", "Produtos sem marca."], correct: 1, explanations: { correct: "A maioria das atividades de novos produtos dedica-se a melhorar produtos existentes (inovações contínuas) em vez de inovações radicais." } }
+                ],
+                [ // Unidade 7
+                    { question: "A seção 'Missão' do plano de negócios define:", options: ["O lucro esperado.", "O propósito fundamental e a razão de ser da empresa.", "O endereço da empresa.", "O nome dos sócios.", "A cor do logotipo."], correct: 1, explanations: { correct: "A missão articula o propósito da organização, seus valores e a direção que deseja seguir." } },
+                    { question: "Para uma empresa de alimentos gourmet, a análise de 'Concorrentes' deve:", options: ["Ignorar outras marcas.", "Identificar marcas premium similares e seus pontos fortes/fracos.", "Focar apenas em fast-food.", "Copiar tudo que eles fazem.", "Não é necessária."], correct: 1, explanations: { correct: "Conhecer a concorrência (direta e indireta) é vital para posicionar a empresa e destacar suas vantagens competitivas." } },
+                    { question: "A seção de 'Viabilidade' serve para:", options: ["Encher o documento.", "Avaliar se a ideia é prática e tem potencial de sucesso financeiro/operacional.", "Escolher o nome da empresa.", "Contratar o marketing.", "Definir o uniforme."], correct: 1, explanations: { correct: "A análise de viabilidade é a conclusão lógica que demonstra se o negócio deve ou não ser implementado com base nos dados." } }
+                ],
+                [ // Unidade 8
+                    { question: "O Marketing Pessoal foca em:", options: ["Vender produtos.", "Promover a imagem e qualidades do indivíduo no mercado.", "Criar logotipos empresariais.", "Gerenciar estoques.", "Análise financeira."], correct: 1, explanations: { correct: "Marketing pessoal é a aplicação de ferramentas de marketing para promover o profissional, suas habilidades e imagem." } },
+                    { question: "Em uma entrevista, o que é fundamental além da qualificação técnica?", options: ["Chegar atrasado.", "Postura, imagem pessoal e comunicação eficaz.", "Falar gírias.", "Ignorar a cultura da empresa.", "Não fazer perguntas."], correct: 1, explanations: { correct: "A imagem, a comunicação não-verbal e o alinhamento cultural são decisivos na percepção do entrevistador." } },
+                    { question: "Networking no marketing pessoal significa:", options: ["Vender produtos para amigos.", "Construir e cultivar uma rede de contatos profissionais.", "Passar o dia nas redes sociais.", "Pedir emprego para desconhecidos.", "Evitar eventos da área."], correct: 1, explanations: { correct: "Networking é a construção de relacionamentos genuínos que podem gerar oportunidades e troca de conhecimentos." } }
+                ],
+                [ // Unidade 9
+                    { question: "O nutricionista no marketing de alimentos pode:", options: ["Promover produtos sem comprovação científica.", "Garantir que rótulos e alegações sejam precisos, claros e éticos.", "Ignorar as leis da ANVISA.", "Receber comissão por vendas casadas.", "Fazer propaganda enganosa."], correct: 1, explanations: { correct: "O papel ético do nutricionista é assegurar a veracidade e o caráter educativo das informações nutricionais." } },
+                    { question: "Sobre o Código de Ética e divulgação:", options: ["É permitido usar imagens de pacientes ('antes e depois') para autopromoção.", "É proibido garantir resultados exclusivos ou sensacionalistas.", "Pode-se prescrever marca única.", "O valor da consulta deve ser usado como propaganda.", "Não há regras."], correct: 1, explanations: { correct: "O Código de Ética proíbe sensacionalismo, garantia de resultados (pois variam biologicamente) e uso indevido de imagem." } },
+                    { question: "No equilíbrio de interesses (comercial vs saúde), o nutricionista deve:", options: ["Priorizar sempre o lucro da empresa.", "Atuar com integridade, defendendo a saúde pública e a sustentabilidade.", "Sair do mercado.", "Ignorar a ciência.", "Seguir apenas o que o marketing pede."], correct: 1, explanations: { correct: "O desafio ético é conciliar o trabalho na indústria com a responsabilidade de promover a saúde e a sustentabilidade." } }
+                ]
+            ]
+        };
+        
+        // --- GLOBAL APP STATE ---
+        let state = { correctAnswers: 0, incorrectAnswers: 0, answeredQuestions: 0, selectedAnswers: {}, incorrectlyAnswered: {}, timerSeconds: 0 };
+        let timerInterval;
+        let totalQuestions = 0;
+        
+        // --- CORE FUNCTIONS ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeQuiz();
+            setupEventListeners();
+        });
+
+        function initializeQuiz() {
+            totalQuestions = Object.values(allQuestions).flat(2).length;
+            
+            const savedState = localStorage.getItem('quizMarketingState');
+            if (savedState) {
+                document.getElementById('resume-prompt').classList.add('visible');
+            } else {
+                startNewQuiz();
+            }
+            const savedTheme = localStorage.getItem('quizTheme');
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-mode');
+                document.getElementById('dark-mode-toggle').checked = true;
+            }
+        }
+
+        function startNewQuiz() {
+            resetState();
+            localStorage.removeItem('quizMarketingState');
+            loadAllQuestions();
+            updateCountersAndProgress();
+            startTimer();
+            document.getElementById('final-score').style.display = 'none';
+        }
+
+        function resumeQuiz() {
+            const savedState = JSON.parse(localStorage.getItem('quizMarketingState'));
+            if (savedState) {
+                state = savedState;
+                loadAllQuestions();
+                restoreUIState();
+                updateCountersAndProgress();
+                startTimer(state.timerSeconds);
+            }
+        }
+        
+        function resetState() {
+            state = { correctAnswers: 0, incorrectAnswers: 0, answeredQuestions: 0, selectedAnswers: {}, incorrectlyAnswered: {}, timerSeconds: 0 };
+        }
+
+        function setupEventListeners() {
+            document.querySelectorAll('.nav-link').forEach(link => link.addEventListener('click', (e) => handleNavClick(e, link)));
+            document.getElementById('livro-toggle').addEventListener('click', function(e){ e.preventDefault(); document.getElementById('livro-submenu').classList.toggle('open'); document.getElementById('livro-menu-item').classList.toggle('open'); });
+            document.getElementById('menu-toggle').addEventListener('click', () => document.getElementById('sidebar').classList.toggle('open'));
+            document.getElementById('font-increase').addEventListener('click', () => changeFontSize(1));
+            document.getElementById('font-decrease').addEventListener('click', () => changeFontSize(-1));
+            document.getElementById('dark-mode-toggle').addEventListener('change', toggleTheme);
+            document.getElementById('resume-yes').addEventListener('click', () => { document.getElementById('resume-prompt').classList.remove('visible'); resumeQuiz(); });
+            document.getElementById('resume-no').addEventListener('click', () => { document.getElementById('resume-prompt').classList.remove('visible'); startNewQuiz(); });
+        }
+
+        function handleNavClick(e, link) {
+            e.preventDefault();
+            const sectionId = link.getAttribute('data-section');
+            if (!sectionId) return;
+
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            link.classList.add('active');
+
+            if (link.closest('.submenu')) {
+                document.getElementById('livro-toggle').classList.add('active');
+            } else if (link.id !== 'livro-toggle') {
+                 document.getElementById('livro-toggle').classList.remove('active');
+            }
+
+            document.querySelectorAll('.content-section').forEach(section => section.classList.toggle('active', section.id === sectionId));
+            
+            if (window.innerWidth <= 1024) {
+                document.getElementById('sidebar').classList.remove('open');
+            }
+            
+            document.querySelector('.page-content').scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        function loadAllQuestions() {
+            for (const category in allQuestions) {
+                if (category === 'livro') {
+                    allQuestions.livro.forEach((unit, index) => {
+                        const unitId = index + 1;
+                        const containerId = `quiz-container-livro-${unitId}`;
+                        const container = document.getElementById(containerId);
+                        if(container) {
+                             container.innerHTML = generateQuestionHTML(unit, `livro-${unitId}`);
+                        }
+                    });
+                } else {
+                    const containerId = `quiz-container-${category}`;
+                    const container = document.getElementById(containerId);
+                    if (container) {
+                         container.innerHTML = generateQuestionHTML(allQuestions[category], category);
+                    }
+                }
+            }
+        }
+
+        function generateQuestionHTML(questions, prefix) {
+            return questions.map((q, i) => {
+                const qId = `${prefix}-${i}`;
+                return `
+                <div class="question-container" id="question-${qId}">
+                    <div class="question"><strong>${i + 1}ª Questão</strong><br>${q.question}</div>
+                    <div class="options">
+                        ${q.options.map((opt, optIdx) => `
+                            <label>
+                                <input type="radio" name="answer-${qId}" value="${optIdx}" onchange="selectAnswer('${qId}')">
+                                <span>${opt}</span>
+                            </label>`).join('')}
+                    </div>
+                    <button id="submit-btn-${qId}" class="quiz-button" onclick="checkAnswer('${qId}')" disabled>Verificar Resposta</button>
+                    <div class="feedback" id="feedback-${qId}" style="display: none;"></div>
+                </div>`;
+            }).join('');
+        }
+        
+        function selectAnswer(questionId) {
+            const radio = document.querySelector(`input[name="answer-${questionId}"]:checked`);
+            if (radio) {
+                state.selectedAnswers[questionId] = parseInt(radio.value, 10);
+                document.getElementById(`submit-btn-${questionId}`).disabled = false;
+            }
+        }
+        
+        function checkAnswer(questionId) {
+            const parts = questionId.split('-');
+            const prefix = parts[0];
+            let questionData;
+
+            // Handle data retrieval based on prefix (ae2, ae3, or livro)
+            if (prefix === 'ae2' || prefix === 'ae3') {
+                questionData = allQuestions[prefix][parseInt(parts[1], 10)];
+            } else if (prefix === 'livro') {
+                // Format: livro-{unit}-{questionIndex}
+                const unitIndex = parseInt(parts[1], 10) - 1;
+                const questionIndex = parseInt(parts[2], 10);
+                questionData = allQuestions.livro[unitIndex][questionIndex];
+            }
+            if (!questionData) return;
+
+            const userAnswer = state.selectedAnswers[questionId];
+            if (userAnswer === undefined) return;
+
+            const isCorrect = userAnswer === questionData.correct;
+            
+            const feedbackDiv = document.getElementById(`feedback-${questionId}`);
+            if (!feedbackDiv.hasAttribute('data-answered')) {
+                 state.answeredQuestions++;
+                 if (isCorrect) state.correctAnswers++;
+                 else {
+                    state.incorrectAnswers++;
+                    state.incorrectlyAnswered[questionId] = {
+                        text: questionData.question,
+                        sectionId: `question-${questionId}`
+                    };
+                 }
+                feedbackDiv.setAttribute('data-answered', 'true');
+            }
+
+            renderFeedback(feedbackDiv, isCorrect, questionData, userAnswer);
+            updateCountersAndProgress();
+            disableQuestion(questionId, questionData, userAnswer);
+
+            localStorage.setItem('quizMarketingState', JSON.stringify(state));
+
+            if (state.answeredQuestions === totalQuestions) {
+                renderFinalScore();
+            }
+        }
+
+        // --- UI & State Restoration ---
+        function restoreUIState() {
+            for (const questionId in state.selectedAnswers) {
+                if (Object.hasOwnProperty.call(state.selectedAnswers, questionId)) {
+                    const userAnswer = state.selectedAnswers[questionId];
+                    const parts = questionId.split('-');
+                    const prefix = parts[0];
+                    let questionData;
+                    
+                    if (prefix === 'ae2' || prefix === 'ae3') {
+                        questionData = allQuestions[prefix][parseInt(parts[1], 10)];
+                    } else if (prefix === 'livro') {
+                        const unitIndex = parseInt(parts[1], 10) - 1;
+                        const questionIndex = parseInt(parts[2], 10);
+                        questionData = allQuestions.livro[unitIndex][questionIndex];
+                    }
+
+                    if(questionData) {
+                        const feedbackDiv = document.getElementById(`feedback-${questionId}`);
+                        if(feedbackDiv) {
+                            feedbackDiv.setAttribute('data-answered', 'true');
+                            renderFeedback(feedbackDiv, userAnswer === questionData.correct, questionData, userAnswer);
+                            disableQuestion(questionId, questionData, userAnswer);
+                        }
+                    }
+                }
+            }
+            if (state.answeredQuestions === totalQuestions) {
+                renderFinalScore();
+            }
+        }
+
+        function renderFeedback(feedbackDiv, isCorrect, questionData, userAnswer) {
+            let feedbackHTML = '';
+            if (isCorrect) {
+                feedbackHTML = `<p class="correct-feedback"><strong>Correto!</strong> ${questionData.explanations.correct}</p>`;
+                feedbackDiv.style.borderLeftColor = "var(--correct-color)";
+            } else {
+                feedbackHTML = `<p class="incorrect-feedback"><strong>Incorreto.</strong></p><p>${questionData.explanations.correct}</p>`;
+                feedbackDiv.style.borderLeftColor = "var(--incorrect-color)";
+            }
+            feedbackDiv.innerHTML = feedbackHTML;
+            feedbackDiv.style.display = 'block';
+        }
+
+        function disableQuestion(questionId, questionData, userAnswer) {
+            const container = document.getElementById(`question-${questionId}`);
+            if(!container) return;
+            const labels = container.querySelectorAll('.options label');
+            labels.forEach((label, i) => {
+                const radio = label.querySelector('input');
+                if (i === questionData.correct) label.classList.add('correct');
+                else if (i === userAnswer) label.classList.add('incorrect');
+                if (i === userAnswer) radio.checked = true;
+                radio.disabled = true;
+            });
+            document.getElementById(`submit-btn-${questionId}`).style.display = 'none';
+        }
+
+        function renderFinalScore() {
+            const scoreDiv = document.getElementById('final-score');
+            let reviewHTML = '';
+            if(Object.keys(state.incorrectlyAnswered).length > 0) {
+                reviewHTML = '<div id="incorrect-review-list"><h4>Revise as questões que você errou:</h4>';
+                for(const qId in state.incorrectlyAnswered) {
+                    const qInfo = state.incorrectlyAnswered[qId];
+                    const questionNumber = parseInt(qId.split('-').pop(), 10) + 1;
+                    reviewHTML += `<a href="#${qInfo.sectionId}">- Questão ${questionNumber}: ${qInfo.text.substring(0, 50)}...</a>`;
+                }
+                reviewHTML += '</div>';
+            }
+            scoreDiv.innerHTML = `🎉 Quiz finalizado! Você acertou <span>${state.correctAnswers} de ${totalQuestions}</span> questões. 🎉${reviewHTML}<button id="reset-quiz-btn" class="quiz-button">Refazer o Quiz</button>`;
+            scoreDiv.style.display = 'block';
+            document.getElementById('reset-quiz-btn').addEventListener('click', startNewQuiz);
+        }
+
+        // --- UTILITY FUNCTIONS ---
+        function updateCounters() {
+            document.getElementById('score-counter').innerHTML = `✅ Acertos: ${state.correctAnswers}`;
+            document.getElementById('incorrect-counter').innerHTML = `❌ Erradas: ${state.incorrectAnswers}`;
+            document.getElementById('remaining-counter').innerHTML = `⏳ Faltam: ${totalQuestions - state.answeredQuestions}`;
+        }
+        
+        function updateProgressBar() {
+            const percentage = totalQuestions > 0 ? (state.answeredQuestions / totalQuestions) * 100 : 0;
+            document.getElementById('progress-bar').style.width = `${percentage}%`;
+        }
+        
+        function updateCountersAndProgress() {
+            updateCounters();
+            updateProgressBar();
+        }
+
+        function startTimer(startSeconds = 0) {
+            if(timerInterval) clearInterval(timerInterval);
+            state.timerSeconds = startSeconds;
+            // No visible timer display in header in original design, but logic kept for state
+            timerInterval = setInterval(() => {
+                state.timerSeconds++;
+            }, 1000);
+        }
+
+        let currentFontSize = 16;
+        function changeFontSize(amount) {
+            const minSize = 12;
+            const maxSize = 20;
+            const newSize = currentFontSize + amount;
+            if (newSize >= minSize && newSize <= maxSize) {
+                currentFontSize = newSize;
+                document.documentElement.style.fontSize = `${currentFontSize}px`;
+            }
+        }
+        
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const theme = document.body.classList.contains('dark-mode') ? 'dark' : 'light';
+            localStorage.setItem('quizTheme', theme);
+        }
+
+        document.getElementById('mobile-menu-button')?.addEventListener('click', function() {
+            var menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        });
+    </script>
+</body>
+</html>
